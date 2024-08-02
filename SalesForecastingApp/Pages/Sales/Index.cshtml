@@ -1,0 +1,80 @@
+﻿@page
+@model SalesForecastingApp.Pages.Sales.IndexModel
+
+@{
+    ViewData["Title"] = "Sales Query";
+}
+
+<h2>Query Sales by Year</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="Year">Year</label>
+        <input asp-for="Year" class="form-control" />
+        <span asp-validation-for="Year" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="GlobalIncrementPercentage">Global Increment Percentage</label>
+        <input asp-for="GlobalIncrementPercentage" class="form-control" />
+        <span asp-validation-for="GlobalIncrementPercentage" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>State-Specific Increment Percentages</label>
+        <div id="state-increments">
+            @if (Model.States != null && Model.States.Any())
+            {
+            foreach (var state in Model.States)
+            {
+                <div class="form-group">
+                    <label>@state</label>
+                    <input type="number" name="StateIncrements[@state]" class="form-control" placeholder="Percentage" />
+                </div>
+            }
+            }
+            else
+            {
+                <p>No states available.</p>
+            }
+
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+@if (Model.SalesData != null)
+{
+    <h3>Total Sales for @Model.Year: @Model.SalesData.TotalSales</h3>
+    <h3>Incremented Total Sales: @Model.SalesData.IncrementedTotalSales</h3>
+
+    <h3>Sales Breakdown by State</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>State</th>
+                <th>Actual Sales</th>
+                <th>Incremented Sales</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.SalesData.StateSalesBreakdown != null)
+            {
+        foreach (var stateSales in Model.SalesData.StateSalesBreakdown)
+        {
+            <tr>
+                <td>@stateSales.State</td>
+                <td>@stateSales.Sales</td>
+                <td>@stateSales.Sales + (stateSales.Sales * (Model.StateIncrements.GetValueOrDefault(stateSales.State, Model.GlobalIncrementPercentage) / 100)))</td>
+            </tr>
+        }
+            }
+            else
+            {
+                <tr><td colspan="3">No sales data available.</td></tr>
+            }
+        </tbody>
+    </table>
+    <form method="post" asp-page-handler="DownloadCsv">
+        <button type="submit" class="btn btn-secondary">Download CSV</button>
+    </form>
+}
+
